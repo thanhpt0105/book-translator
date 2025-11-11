@@ -24,6 +24,11 @@ loguru==0.7.2
 # Optional: for EPUB generation
 ebooklib==0.18
 
+# Text-to-Speech (TTS)
+edge-tts==6.1.9  # FREE - Microsoft Edge TTS, excellent Vietnamese support
+# elevenlabs==0.2.27  # PAID - Very natural voices (uncomment if using)
+# google-cloud-texttospeech==2.14.1  # PAID - Google Cloud TTS (uncomment if using)
+
 # Development
 pytest==8.0.0
 black==24.2.0

@@ -63,6 +63,8 @@ translation/
 
 ### Windows
 
+👉 **Quick Fix for "Rust/Cargo not installed" error: [WINDOWS_RUST_FIX.md](WINDOWS_RUST_FIX.md)**
+
 👉 **Quick Fix for "No module named 'loguru'" error: [WINDOWS_QUICK_START.md](WINDOWS_QUICK_START.md)**
 
 👉 **Full setup guide: [WINDOWS_SETUP.md](WINDOWS_SETUP.md)**
@@ -75,13 +77,20 @@ translation/
 # OR manual setup:
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+pip install --only-binary :all: pydantic pydantic-core pydantic-settings
 pip install -r requirements.txt
 python test_setup.py
 ```
 
-**Common issue:** "No module named 'loguru'" after `pip install`
-- **Cause:** `pip` and `python` using different Python installations
-- **Solution:** Use virtual environment (run `setup_windows.ps1` script)
+**Common issues:**
+1. **"Rust/Cargo not installed"** during pip install
+   - **Cause:** pydantic trying to compile from source
+   - **Solution:** Use `--only-binary :all:` flag (see [WINDOWS_RUST_FIX.md](WINDOWS_RUST_FIX.md))
+   
+2. **"No module named 'loguru'"** after pip install
+   - **Cause:** `pip` and `python` using different Python installations
+   - **Solution:** Use virtual environment (run `setup_windows.ps1` script)
 
 
 
