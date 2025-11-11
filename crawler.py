@@ -168,18 +168,43 @@ class NovelCrawler:
             return None
         
         # Extract main content
-        # The content appears to be in divs or direct text after the title
-        content_parts = []
+        # Look for the main content container (usually has id="page" or class="content")
+        main_content = soup.find('div', {'id': 'page'}) or soup.find('div', class_='page-d')
         
-        # Find all text content after the title
-        for elem in soup.find_all(['p', 'div']):
-            text = elem.get_text(strip=True)
-            # Filter out navigation, ads, and recommendations
-            if text and len(text) > 20:  # Avoid short navigation text
-                if '猜您喜歡' not in text and '下一章' not in text and '上一章' not in text:
-                    content_parts.append(text)
+        if main_content:
+            # Get all paragraph tags within the main content
+            paragraphs = main_content.find_all('p')
+            if paragraphs:
+                # Extract text from each paragraph
+                content_parts = []
+                for p in paragraphs:
+                    text = p.get_text(strip=True)
+                    if text and len(text) > 10:  # Skip very short paragraphs
+                        # Skip navigation
+                        if ('猜您喜歡' not in text and '下一章' not in text and 
+                            '上一章' not in text and text != title):
+                            content_parts.append(text)
+                content = '\n\n'.join(content_parts)
+            else:
+                # No paragraphs found, get the whole div text
+                content = main_content.get_text(strip=True)
+        else:
+            # Fallback: extract from all p/div tags (old method)
+            content_parts = []
+            for elem in soup.find_all(['p']):
+                text = elem.get_text(strip=True)
+                if text and len(text) > 20:
+                    if ('猜您喜歡' not in text and '下一章' not in text and 
+                        '上一章' not in text and text != title):
+                        content_parts.append(text)
+            content = '\n\n'.join(content_parts)
         
-        content = '\n\n'.join(content_parts)
+        # Remove title from beginning if it still appears
+        if content.startswith(title):
+            content = content[len(title):].lstrip()
+            # Handle double title
+            if content.startswith(title):
+                content = content[len(title):].lstrip()
         
         if not content or len(content) < 100:
             logger.warning(f"Content too short for chapter {chapter_num}")
