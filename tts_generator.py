@@ -39,7 +39,7 @@ class TTSGenerator:
         
         # Default voices for each provider
         self.default_voices = {
-            "edge-tts": "vi-VN-HoaiMyNeural",  # Female, natural Vietnamese
+            "edge-tts": "vi-VN-NamMinhNeural",  # Male, natural Vietnamese
             "openai": "nova",  # Multilingual, good for storytelling
             "elevenlabs": "21m00Tcm4TlvDq8ikWAM",  # Rachel (can be cloned)
             "google": "vi-VN-Standard-A"  # Vietnamese female

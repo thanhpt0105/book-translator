@@ -38,7 +38,7 @@ class Settings(BaseSettings):
     
     # Text-to-Speech Settings
     tts_provider: str = "edge-tts"  # "edge-tts", "openai", "elevenlabs", "google"
-    tts_voice: str = "vi-VN-HoaiMyNeural"  # Default Vietnamese voice
+    tts_voice: str = "vi-VN-NamMinhNeural"  # Default Vietnamese voice
     tts_merge_chapters: bool = False  # Merge all chapters into single audio file
     
     # Storage Paths
