@@ -41,14 +41,14 @@ class NovelCrawler:
         return f"https://ixdzs.tw/read/{self.book_id}/p{page_num}.html"
     
     def extract_chapter_number_from_title(self, title: str) -> Optional[int]:
-        """Extract chapter number from title like '第1212章 ...' or '第一章 ...' or '第二十一章 ...' or '第723~724章'"""
-        # First try numeric pattern (may include ranges like 723~724)
-        match = re.search(r'第(\d+)(?:~\d+)?章', title)
+        """Extract chapter number from title like '第1212章 ...' or '第一章 ...' or '第二十一章 ...' or '第723~724章' or '第1128-1129章'"""
+        # First try numeric pattern (may include ranges like 723~724 or 1128-1129)
+        match = re.search(r'第(\d+)(?:[~\-]\d+)?章', title)
         if match:
             return int(match.group(1))
         
         # Try Chinese number pattern (may include ranges)
-        match = re.search(r'第([零一二三四五六七八九十百千万]+)(?:~[零一二三四五六七八九十百千万\d]+)?章', title)
+        match = re.search(r'第([零一二三四五六七八九十百千万]+)(?:[~\-][零一二三四五六七八九十百千万\d]+)?章', title)
         if match:
             chinese_num_str = match.group(1)
             return self.chinese_to_number(chinese_num_str)
