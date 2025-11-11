@@ -7,7 +7,7 @@ from loguru import logger
 
 from config import settings
 from crawler import NovelCrawler
-from character_extractor import CharacterExtractor, build_character_glossary
+from character_extractor import CharacterExtractor, build_character_glossary, update_glossary_translations
 from translator import Translator, translate_all_chapters
 from models import CharacterGlossary
 
@@ -47,6 +47,12 @@ def cmd_extract_characters():
     """Extract character names and build glossary."""
     logger.info("=== Extracting Characters ===")
     build_character_glossary()
+
+
+def cmd_update_characters():
+    """Update character glossary with Vietnamese translations."""
+    logger.info("=== Updating Character Translations ===")
+    update_glossary_translations()
 
 
 def cmd_translate():
@@ -147,6 +153,7 @@ def main():
         print("\nCommands:")
         print("  crawl              - Crawl chapters from website")
         print("  extract-characters - Extract character names and build glossary")
+        print("  update-characters  - Update character names with Vietnamese translations")
         print("  translate          - Translate all crawled chapters (using OpenAI/Anthropic)")
         print("  translate-local    - Translate using local LLM (LM Studio)")
         print("  export             - Export translations to readable formats")
@@ -154,9 +161,10 @@ def main():
         print("\nFull workflow:")
         print("  1. python main.py crawl")
         print("  2. python main.py extract-characters")
-        print("  3. (Manually review and edit data/glossary/characters.json)")
-        print("  4. python main.py translate-local  # Using local LLM")
-        print("  5. python main.py export")
+        print("  3. python main.py update-characters  # Auto-translate character names")
+        print("  4. (Manually review and edit data/glossary/characters.json)")
+        print("  5. python main.py translate-local  # Using local LLM")
+        print("  6. python main.py export")
         sys.exit(1)
     
     command = sys.argv[1]
@@ -164,6 +172,7 @@ def main():
     commands = {
         'crawl': cmd_crawl,
         'extract-characters': cmd_extract_characters,
+        'update-characters': cmd_update_characters,
         'translate': cmd_translate,
         'translate-local': cmd_translate_local,
         'export': cmd_export,
