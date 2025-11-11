@@ -111,21 +111,70 @@ class CharacterExtractor:
         
         return glossary
     
-    def auto_translate_names(self, glossary: CharacterGlossary, translator) -> CharacterGlossary:
-        """Auto-translate character names using AI."""
-        logger.info("Auto-translating character names")
+    def auto_translate_names(self, glossary: CharacterGlossary) -> CharacterGlossary:
+        """Auto-translate character names using OpenAI."""
+        from translator import Translator
+        
+        logger.info("Auto-translating character names to Vietnamese")
+        
+        # Create a translator instance (without glossary to avoid circular dependency)
+        translator = Translator(CharacterGlossary())
         
         for character in glossary.characters:
             if not character.vietnamese:
                 try:
-                    prompt = f"Translate this Chinese name to Vietnamese phonetically (romanization): {character.chinese}\nProvide ONLY the Vietnamese name, nothing else."
-                    character.vietnamese = translator.translate_text(prompt).strip()
-                    logger.debug(f"{character.chinese} → {character.vietnamese}")
+                    prompt = f"""Translate this Chinese name to Vietnamese phonetically.
+Chinese name: {character.chinese}
+
+Provide ONLY the Vietnamese romanization, nothing else. For example:
+- 葉陽 → Diệp Dương
+- 王媽 → Vương Ma
+- 蘇婉容 → Tô Uyển Dung
+
+Vietnamese name:"""
+                    
+                    vietnamese = translator.translate_with_openai(prompt, "")
+                    character.vietnamese = vietnamese.strip()
+                    logger.info(f"  {character.chinese} → {character.vietnamese}")
                 except Exception as e:
                     logger.error(f"Failed to translate name {character.chinese}: {e}")
                     character.vietnamese = character.chinese
         
         return glossary
+
+
+def update_glossary_translations():
+    """Update existing glossary with Vietnamese translations."""
+    glossary_path = settings.glossary_dir / "characters.json"
+    
+    if not glossary_path.exists():
+        logger.error(f"Glossary not found at {glossary_path}")
+        return
+    
+    # Load existing glossary
+    glossary = CharacterGlossary.load(glossary_path)
+    logger.info(f"Loaded glossary with {len(glossary.characters)} characters")
+    
+    # Count how many need translation
+    needs_translation = sum(1 for char in glossary.characters if not char.vietnamese)
+    logger.info(f"{needs_translation} characters need Vietnamese translation")
+    
+    if needs_translation == 0:
+        logger.info("All characters already have Vietnamese names!")
+        return
+    
+    # Auto-translate
+    extractor = CharacterExtractor()
+    glossary = extractor.auto_translate_names(glossary)
+    
+    # Save updated glossary
+    glossary.save(glossary_path)
+    logger.success(f"Updated glossary saved to {glossary_path}")
+    
+    # Print results
+    logger.info("\nTranslated characters:")
+    for char in glossary.characters:
+        logger.info(f"  {char.chinese} → {char.vietnamese}")
 
 
 def build_character_glossary():
@@ -140,7 +189,7 @@ def build_character_glossary():
         return
     
     # Load first N chapters for initial glossary
-    num_chapters = min(10, len(chapter_files))
+    num_chapters = min(100, len(chapter_files))
     chapters = []
     
     for chapter_file in chapter_files[:num_chapters]:
@@ -153,6 +202,9 @@ def build_character_glossary():
     extractor = CharacterExtractor()
     glossary = extractor.build_glossary_from_chapters(chapters)
     
+    # Auto-translate character names to Vietnamese
+    glossary = extractor.auto_translate_names(glossary)
+    
     # Save glossary
     glossary_path = settings.glossary_dir / "characters.json"
     glossary.save(glossary_path)
@@ -163,7 +215,7 @@ def build_character_glossary():
     # Print top characters
     logger.info("Top characters:")
     for char in glossary.characters[:10]:
-        logger.info(f"  {char.chinese} ({char.role}, appears in chapter {char.first_appearance})")
+        logger.info(f"  {char.chinese} → {char.vietnamese} ({char.role}, chapter {char.first_appearance})")
 
 
 if __name__ == "__main__":
