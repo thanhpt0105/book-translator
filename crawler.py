@@ -41,33 +41,113 @@ class NovelCrawler:
         return f"https://ixdzs.tw/read/{self.book_id}/p{page_num}.html"
     
     def extract_chapter_number_from_title(self, title: str) -> Optional[int]:
-        """Extract chapter number from title like '第1212章 ...' or '第一章 ...'"""
+        """Extract chapter number from title like '第1212章 ...' or '第一章 ...' or '第二十一章 ...'"""
         # First try numeric pattern
         match = re.search(r'第(\d+)章', title)
         if match:
             return int(match.group(1))
         
-        # Map Chinese numbers to integers
+        # Try Chinese number pattern
+        match = re.search(r'第([零一二三四五六七八九十百千万]+)章', title)
+        if match:
+            chinese_num_str = match.group(1)
+            return self.chinese_to_number(chinese_num_str)
+        
+        return None
+    
+    def chinese_to_number(self, chinese_str: str) -> Optional[int]:
+        """Convert Chinese number string to integer."""
+        # Map of Chinese digits
         chinese_nums = {
-            '一': 1, '二': 2, '三': 3, '四': 4, '五': 5,
-            '六': 6, '七': 7, '八': 8, '九': 9, '十': 10,
-            '百': 100, '千': 1000
+            '零': 0, '一': 1, '二': 2, '三': 3, '四': 4,
+            '五': 5, '六': 6, '七': 7, '八': 8, '九': 9,
+            '十': 10, '百': 100, '千': 1000, '万': 10000
         }
         
-        # Try Chinese number pattern (e.g., 第一章, 第十二章)
-        match = re.search(r'第([一二三四五六七八九十百千]+)章', title)
-        if match:
-            chinese_num = match.group(1)
-            # Simple conversion for common cases
-            if chinese_num in chinese_nums:
-                return chinese_nums[chinese_num]
-            # Handle compound numbers like 十二, 二十三
-            if len(chinese_num) == 2:
-                if chinese_num[0] == '十':
-                    return 10 + chinese_nums.get(chinese_num[1], 0)
-                elif chinese_num[1] == '十':
-                    return chinese_nums.get(chinese_num[0], 0) * 10
+        # Simple cases (1-10)
+        if chinese_str in chinese_nums:
+            return chinese_nums[chinese_str]
         
+        # Handle special case: 十 = 10, 十一 = 11, etc.
+        if chinese_str.startswith('十') and '百' not in chinese_str:
+            if len(chinese_str) == 1:
+                return 10
+            remainder = chinese_str[1:].replace('零', '')
+            if remainder:
+                return 10 + chinese_nums.get(remainder[0], 0)
+            return 10
+        
+        # Handle numbers like 二十, 三十, etc.
+        if '十' in chinese_str and '百' not in chinese_str and '千' not in chinese_str:
+            parts = chinese_str.split('十')
+            if len(parts) == 2:
+                tens = chinese_nums.get(parts[0], 1) if parts[0] else 1
+                ones_str = parts[1].replace('零', '')
+                ones = chinese_nums.get(ones_str, 0) if ones_str else 0
+                return tens * 10 + ones
+        
+        # Handle thousands: 一千二百三十四, 一千零一, etc.
+        # IMPORTANT: Check thousands BEFORE hundreds to avoid incorrect splits
+        if '千' in chinese_str:
+            parts = chinese_str.split('千')
+            thousands = chinese_nums.get(parts[0], 1) if parts[0] else 1
+            result = thousands * 1000
+            
+            if len(parts) > 1 and parts[1]:
+                remainder_str = parts[1]
+                
+                # Handle patterns like 一千零一 (1001)
+                if '零' in remainder_str:
+                    digits = [c for c in remainder_str if c != '零']
+                    if len(digits) == 1 and '百' not in remainder_str and '十' not in remainder_str:
+                        # Single digit after 零: e.g., 一千零一 -> 1001
+                        result += chinese_nums.get(digits[0], 0)
+                    else:
+                        # Has hundreds or tens, remove 零 and parse
+                        clean_str = remainder_str.replace('零', '')
+                        sub_result = self.chinese_to_number(clean_str)
+                        if sub_result:
+                            result += sub_result
+                else:
+                    # No 零, normal parsing
+                    sub_result = self.chinese_to_number(remainder_str)
+                    if sub_result:
+                        result += sub_result
+            
+            return result
+        
+        # Handle hundreds: 一百二十三, 一百零一, 三百, etc.
+        if '百' in chinese_str:
+            parts = chinese_str.split('百')
+            hundreds = chinese_nums.get(parts[0], 1) if parts[0] else 1
+            result = hundreds * 100
+            
+            if len(parts) > 1 and parts[1]:
+                remainder_str = parts[1]
+                
+                # Handle patterns like 一百零一 (101), 三百零五 (305)
+                if '零' in remainder_str:
+                    # Remove all 零 and get remaining digits
+                    digits = [c for c in remainder_str if c != '零']
+                    if len(digits) == 1:
+                        # Single digit after 零: e.g., 一百零一 -> 101
+                        result += chinese_nums.get(digits[0], 0)
+                    elif len(digits) > 1 and '十' in remainder_str:
+                        # Has tens: e.g., shouldn't normally have 零 with 十
+                        # But handle anyway: remove 零 and parse
+                        clean_str = remainder_str.replace('零', '')
+                        sub_result = self.chinese_to_number(clean_str)
+                        if sub_result:
+                            result += sub_result
+                else:
+                    # No 零, normal parsing: e.g., 一百二十三 -> 123
+                    sub_result = self.chinese_to_number(remainder_str)
+                    if sub_result:
+                        result += sub_result
+            
+            return result
+        
+        logger.warning(f"Could not parse Chinese number: {chinese_str}")
         return None
     
     def parse_chapter(self, html: str, url: str) -> Optional[Chapter]:
@@ -156,6 +236,21 @@ class NovelCrawler:
     def crawl_chapters(self, start: int, end: Optional[int] = None) -> List[Chapter]:
         """Crawl multiple chapters."""
         chapters = []
+        
+        # Find the latest crawled chapter to resume from
+        existing_chapters = sorted(settings.raw_chapters_dir.glob("chapter_*.json"))
+        if existing_chapters:
+            # Get the highest chapter number
+            last_chapter_file = existing_chapters[-1]
+            try:
+                last_chapter = Chapter.model_validate_json(last_chapter_file.read_text(encoding='utf-8'))
+                latest_chapter_num = last_chapter.chapter_number
+                if latest_chapter_num >= start:
+                    start = latest_chapter_num + 1
+                    logger.info(f"Resuming from chapter {start} (found {len(existing_chapters)} existing chapters)")
+            except Exception as e:
+                logger.warning(f"Could not read last chapter file: {e}")
+        
         current = start
         
         # Create progress bar
