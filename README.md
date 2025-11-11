@@ -5,11 +5,12 @@ A comprehensive system for crawling Chinese novels from web sources and translat
 ## Features
 
 - **Web Crawler**: Automatically extracts chapters from Chinese novel websites
-- **AI Translation**: Context-aware translation using GPT-4 or Claude
+- **AI Translation**: Context-aware translation using GPT-4, Claude, or **Local LLM**
 - **Character Consistency**: Maintains consistent character name translations across all chapters
 - **Batch Processing**: Efficient processing of large novels with hundreds of chapters
 - **Progress Tracking**: Resume capability for interrupted operations
 - **Multiple Export Formats**: Markdown, JSON, and optional EPUB output
+- **💰 Free Local LLM Support**: Translate unlimited chapters for $0 using LM Studio!
 
 ## Project Structure
 
@@ -88,7 +89,10 @@ python main.py extract-characters
 #    Edit: data/glossary/characters.json
 #    Add Vietnamese translations for character names
 
-# 4. Translate all chapters
+# 4a. Translate using local LLM (FREE, recommended!)
+python main.py translate-local
+
+# OR 4b. Translate using cloud AI (costs money)
 python main.py translate
 
 # 5. Export to readable format
@@ -97,6 +101,22 @@ python main.py export
 # Check status anytime
 python main.py status
 ```
+
+### Using Local LLM (FREE Translation!)
+
+For **free unlimited translation** using LM Studio:
+
+👉 **See detailed guide: [LOCAL_LLM_SETUP.md](LOCAL_LLM_SETUP.md)**
+
+Quick start:
+1. Install [LM Studio](https://lmstudio.ai/)
+2. Download Qwen2.5-32B-Instruct model
+3. Start the local server
+4. Run: `python main.py translate-local`
+
+**Cost comparison:**
+- GPT-4o: ~$500-700 for 1000 chapters
+- Local LLM: **$0** ✨
 
 ### Individual Commands
 

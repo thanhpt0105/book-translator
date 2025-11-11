@@ -55,6 +55,16 @@ def cmd_translate():
     translate_all_chapters()
 
 
+def cmd_translate_local():
+    """Translate all chapters using local LLM."""
+    logger.info("=== Starting Local LLM Translation ===")
+    from local_llm_translator import translate_all_chapters_local
+    
+    # You can customize the base URL here
+    base_url = "http://localhost:1234/v1"
+    translate_all_chapters_local(base_url)
+
+
 def cmd_export():
     """Export translated chapters to readable formats."""
     logger.info("=== Exporting Translations ===")
@@ -137,14 +147,15 @@ def main():
         print("\nCommands:")
         print("  crawl              - Crawl chapters from website")
         print("  extract-characters - Extract character names and build glossary")
-        print("  translate          - Translate all crawled chapters")
+        print("  translate          - Translate all crawled chapters (using OpenAI/Anthropic)")
+        print("  translate-local    - Translate using local LLM (LM Studio)")
         print("  export             - Export translations to readable formats")
         print("  status             - Show project status")
         print("\nFull workflow:")
         print("  1. python main.py crawl")
         print("  2. python main.py extract-characters")
         print("  3. (Manually review and edit data/glossary/characters.json)")
-        print("  4. python main.py translate")
+        print("  4. python main.py translate-local  # Using local LLM")
         print("  5. python main.py export")
         sys.exit(1)
     
@@ -154,6 +165,7 @@ def main():
         'crawl': cmd_crawl,
         'extract-characters': cmd_extract_characters,
         'translate': cmd_translate,
+        'translate-local': cmd_translate_local,
         'export': cmd_export,
         'status': cmd_status,
     }
