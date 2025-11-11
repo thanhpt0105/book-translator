@@ -17,6 +17,8 @@ class Settings(BaseSettings):
     # API Keys
     openai_api_key: str = ""
     anthropic_api_key: str = ""
+    elevenlabs_api_key: str = ""
+    google_application_credentials: str = ""  # Path to Google Cloud credentials JSON
     
     # Crawler Settings
     base_url: str = "https://ixdzs.tw/read/273426/"
@@ -33,6 +35,11 @@ class Settings(BaseSettings):
     translation_batch_size: int = 5
     context_window_paragraphs: int = 3
     temperature: float = 0.3
+    
+    # Text-to-Speech Settings
+    tts_provider: str = "edge-tts"  # "edge-tts", "openai", "elevenlabs", "google"
+    tts_voice: str = "vi-VN-HoaiMyNeural"  # Default Vietnamese voice
+    tts_merge_chapters: bool = False  # Merge all chapters into single audio file
     
     # Storage Paths
     data_dir: Path = Path("./data")

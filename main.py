@@ -100,6 +100,23 @@ def cmd_export():
     logger.success("Export completed!")
 
 
+def cmd_generate_audio():
+    """Generate audiobook from translated chapters."""
+    logger.info("=== Generating Audiobook ===")
+    import asyncio
+    from tts_generator import generate_audiobook
+    
+    provider = settings.tts_provider
+    voice = settings.tts_voice if settings.tts_voice else None
+    merge = settings.tts_merge_chapters
+    
+    logger.info(f"TTS Provider: {provider}")
+    logger.info(f"Voice: {voice or 'default'}")
+    logger.info(f"Merge chapters: {merge}")
+    
+    asyncio.run(generate_audiobook(provider=provider, voice=voice, merge_chapters=merge))
+
+
 def export_markdown(chapters):
     """Export chapters as Markdown file."""
     output_file = settings.output_dir / "full_book_vietnamese.md"
@@ -156,7 +173,8 @@ def main():
         print("  update-characters  - Update character names with Vietnamese translations")
         print("  translate          - Translate all crawled chapters (using OpenAI/Anthropic)")
         print("  translate-local    - Translate using local LLM (LM Studio)")
-        print("  export             - Export translations to readable formats")
+        print("  export             - Export translations to markdown")
+        print("  generate-audio     - Generate audiobook from translations")
         print("  status             - Show project status")
         print("\nFull workflow:")
         print("  1. python main.py crawl")
@@ -165,6 +183,7 @@ def main():
         print("  4. (Manually review and edit data/glossary/characters.json)")
         print("  5. python main.py translate-local  # Using local LLM")
         print("  6. python main.py export")
+        print("  7. python main.py generate-audio   # Generate audiobook")
         sys.exit(1)
     
     command = sys.argv[1]
@@ -176,6 +195,7 @@ def main():
         'translate': cmd_translate,
         'translate-local': cmd_translate_local,
         'export': cmd_export,
+        'generate-audio': cmd_generate_audio,
         'status': cmd_status,
     }
     
