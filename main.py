@@ -84,6 +84,7 @@ def cmd_export():
         return
     
     from models import Chapter
+    from exporter import export_to_markdown, export_to_docx, export_to_epub, export_to_pdf
     
     chapters = []
     for chapter_file in chapter_files:
@@ -93,9 +94,25 @@ def cmd_export():
     # Sort by chapter number
     chapters.sort(key=lambda c: c.chapter_number)
     
-    # Export as Markdown
-    if 'markdown' in settings.output_formats:
-        export_markdown(chapters)
+    # Get output formats from config
+    output_formats = settings.output_formats.lower().split(',')
+    
+    # Export to requested formats
+    if 'markdown' in output_formats or 'md' in output_formats:
+        output_file = settings.output_dir / "full_book_vietnamese.md"
+        export_to_markdown(chapters, output_file)
+    
+    if 'docx' in output_formats or 'word' in output_formats:
+        output_file = settings.output_dir / "full_book_vietnamese.docx"
+        export_to_docx(chapters, output_file)
+    
+    if 'epub' in output_formats:
+        output_file = settings.output_dir / "full_book_vietnamese.epub"
+        export_to_epub(chapters, output_file)
+    
+    if 'pdf' in output_formats:
+        output_file = settings.output_dir / "full_book_vietnamese.pdf"
+        export_to_pdf(chapters, output_file)
     
     logger.success("Export completed!")
 
@@ -115,26 +132,6 @@ def cmd_generate_audio():
     logger.info(f"Merge chapters: {merge}")
     
     asyncio.run(generate_audiobook(provider=provider, voice=voice, merge_chapters=merge))
-
-
-def export_markdown(chapters):
-    """Export chapters as Markdown file."""
-    output_file = settings.output_dir / "full_book_vietnamese.md"
-    
-    with output_file.open('w', encoding='utf-8') as f:
-        # Write header
-        f.write("# Translated Novel\n\n")
-        f.write(f"Total Chapters: {len(chapters)}\n\n")
-        f.write("---\n\n")
-        
-        # Write each chapter
-        for chapter in chapters:
-            f.write(f"## {chapter.title_vietnamese}\n\n")
-            f.write(f"*Original: {chapter.title_chinese}*\n\n")
-            f.write(chapter.content_vietnamese)
-            f.write("\n\n---\n\n")
-    
-    logger.success(f"Markdown exported to {output_file}")
 
 
 def cmd_status():
@@ -173,7 +170,7 @@ def main():
         print("  update-characters  - Update character names with Vietnamese translations")
         print("  translate          - Translate all crawled chapters (using OpenAI/Anthropic)")
         print("  translate-local    - Translate using local LLM (LM Studio)")
-        print("  export             - Export translations to markdown")
+        print("  export             - Export translations to Markdown, Word, EPUB, PDF")
         print("  generate-audio     - Generate audiobook from translations")
         print("  status             - Show project status")
         print("\nFull workflow:")
@@ -182,8 +179,9 @@ def main():
         print("  3. python main.py update-characters  # Auto-translate character names")
         print("  4. (Manually review and edit data/glossary/characters.json)")
         print("  5. python main.py translate-local  # Using local LLM")
-        print("  6. python main.py export")
+        print("  6. python main.py export            # Exports to .md, .docx, .epub, .pdf")
         print("  7. python main.py generate-audio   # Generate audiobook")
+        print("\nNote: Configure export formats in .env file (OUTPUT_FORMATS=markdown,docx,epub,pdf)")
         sys.exit(1)
     
     command = sys.argv[1]

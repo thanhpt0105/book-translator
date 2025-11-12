@@ -46,7 +46,7 @@ class Settings(BaseSettings):
     output_dir: Path = Path("./output")
     
     # Output Formats
-    output_formats: str = "json,markdown"
+    output_formats: str = "json,markdown,docx,epub,pdf"  # Supported: markdown/md, docx/word, epub, pdf
     
     # Logging
     log_level: str = "INFO"
