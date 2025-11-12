@@ -9,7 +9,7 @@ A comprehensive system for crawling Chinese novels from web sources and translat
 - **Character Consistency**: Maintains consistent character name translations across all chapters
 - **Batch Processing**: Efficient processing of large novels with hundreds of chapters
 - **Progress Tracking**: Resume capability for interrupted operations
-- **Multiple Export Formats**: Markdown, JSON, and optional EPUB output
+- **Multiple Export Formats**: Export to Markdown, Word (DOCX), EPUB, and PDF
 - **💰 Free Local LLM Support**: Translate unlimited chapters for $0 using LM Studio!
 - **🎙️ Audiobook Generation**: Convert translated text to natural Vietnamese storytelling audio
 
@@ -235,9 +235,20 @@ You can manually edit this file to:
 
 ## Output Files
 
-After running `export`, you'll find:
-- `output/full_book_vietnamese.md` - Complete translated book in Markdown
-- Each chapter also saved individually in `data/translated/chapters/`
+After running `export`, you'll find in the `output/` directory:
+- `full_book_vietnamese.md` - Markdown format (readable in any text editor)
+- `full_book_vietnamese.docx` - Microsoft Word format (editable)
+- `full_book_vietnamese.epub` - EPUB ebook format (for e-readers like Kindle, Apple Books)
+- `full_book_vietnamese.pdf` - PDF format (printable, shareable)
+
+Individual chapters are also saved in `data/translated/chapters/`.
+
+**Configure export formats** in `.env`:
+```env
+# Choose which formats to export (comma-separated)
+OUTPUT_FORMATS=markdown,docx,epub,pdf
+# Options: markdown, md, docx, word, epub, pdf
+```
 
 ## Troubleshooting
 
