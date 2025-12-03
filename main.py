@@ -62,13 +62,22 @@ def cmd_translate():
 
 
 def cmd_translate_local():
-    """Translate all chapters using local LLM."""
+    """Translate selected chapters using local LLM."""
     logger.info("=== Starting Local LLM Translation ===")
     from local_llm_translator import translate_all_chapters_local
-    
-    # You can customize the base URL here
+
     base_url = "http://localhost:1234/v1"
-    translate_all_chapters_local(base_url)
+    chapter_from = None
+    chapter_to = None
+    if len(sys.argv) >= 4:
+        try:
+            chapter_from = int(sys.argv[2])
+            chapter_to = int(sys.argv[3])
+        except Exception:
+            logger.warning("Invalid chapter range arguments. Usage: python main.py translate-local [chapter_from] [chapter_to]")
+            chapter_from = None
+            chapter_to = None
+    translate_all_chapters_local(base_url, chapter_from, chapter_to)
 
 
 def cmd_export():

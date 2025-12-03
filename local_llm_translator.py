@@ -151,8 +151,8 @@ Translation Guidelines:
         return chapter
 
 
-def translate_all_chapters_local(base_url: str = "http://localhost:1234/v1"):
-    """Translate all crawled chapters using local LLM."""
+def translate_all_chapters_local(base_url: str = "http://localhost:1234/v1", chapter_from: int = None, chapter_to: int = None):
+    """Translate all crawled chapters using local LLM, with optional chapter range."""
     settings.ensure_directories()
     
     # Load glossary
@@ -172,6 +172,11 @@ def translate_all_chapters_local(base_url: str = "http://localhost:1234/v1"):
         # Load chapter
         chapter = Chapter.model_validate_json(chapter_file.read_text(encoding='utf-8'))
         
+        # Filter by chapter range if specified
+        if chapter_from is not None and chapter_to is not None:
+            if not (chapter_from <= chapter.chapter_number <= chapter_to):
+                continue
+        
         # Check if already translated
         translated_file = settings.translated_chapters_dir / chapter_file.name
         if translated_file.exists():
@@ -184,13 +189,14 @@ def translate_all_chapters_local(base_url: str = "http://localhost:1234/v1"):
         # Translate
         try:
             chapter = translator.translate_chapter(chapter, previous_context)
-            
+            # Remove <think>...</think> tags from translation and title
+            import re
+            chapter.content_vietnamese = re.sub(r'<think>.*?</think>', '', chapter.content_vietnamese, flags=re.DOTALL)
+            chapter.title_vietnamese = re.sub(r'<think>.*?</think>', '', chapter.title_vietnamese, flags=re.DOTALL)
             # Save translated chapter
             chapter.save_translated(settings.translated_chapters_dir)
-            
             # Update context for next chapter
             previous_context = chapter.content_vietnamese[-1000:]
-            
         except Exception as e:
             logger.error(f"Failed to translate chapter {chapter.chapter_number}: {e}")
             continue

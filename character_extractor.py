@@ -189,7 +189,7 @@ def build_character_glossary():
         return
     
     # Load first N chapters for initial glossary
-    num_chapters = min(100, len(chapter_files))
+    num_chapters = min(500, len(chapter_files))
     chapters = []
     
     for chapter_file in chapter_files[:num_chapters]:
